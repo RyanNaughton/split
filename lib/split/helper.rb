@@ -183,5 +183,29 @@ module Split
     def keys_without_experiment(keys, experiment_key)
       keys.reject { |k| k.match(Regexp.new("^#{experiment_key}(:finished)?$")) }
     end
+
+
+    def self.encode(object)
+      if MultiJson.respond_to?(:dump) && MultiJson.respond_to?(:load)
+        MultiJson.dump object
+      else
+        MultiJson.encode object
+      end
+    end
+
+    def self.decode(object)
+      return unless object
+    
+      begin
+        if MultiJson.respond_to?(:dump) && MultiJson.respond_to?(:load)
+          MultiJson.load object
+        else
+          MultiJson.decode object
+        end
+      rescue ::MultiJson::DecodeError => e
+        raise DecodeException, e.message, e.backtrace
+      end
+    end
+
   end
 end

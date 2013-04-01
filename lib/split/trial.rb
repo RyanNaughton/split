@@ -2,11 +2,15 @@ module Split
   class Trial
     attr_accessor :experiment
     attr_accessor :goals
+    attr_accessor :logged_args
+    attr_accessor :uid
 
     def initialize(attrs = {})
+      self.uid = SecureRandom.hex(5)
       self.experiment = attrs[:experiment]  if !attrs[:experiment].nil?
       self.alternative = attrs[:alternative] if !attrs[:alternative].nil?
       self.goals = attrs[:goals] if !attrs[:goals].nil?
+      self.logged_args = attrs[:logged_args] if !attrs[:logged_args].nil?
     end
 
     def alternative
@@ -17,6 +21,7 @@ module Split
 
     def complete!
       if alternative
+        log!(:completion)
         if self.goals.empty?
           alternative.increment_completion
         else
@@ -31,7 +36,13 @@ module Split
     end
 
     def record!
+      log!(:participation)
       alternative.increment_participation
+    end
+
+    def log!(action)
+      args = {uid: uid, action: action, args:logged_args}
+      Split.redis.rpush "experiment:#{experiment.name.to_s}:log", Split::Helper.encode(args) if !logged_args.nil?
     end
 
     def choose
