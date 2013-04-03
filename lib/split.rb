@@ -2,7 +2,7 @@
   require "split/#{f}"
 end
 
-require 'split/engine' if defined?(Rails)
+require 'split/engine' if defined?(Rails) && Rails::VERSION::STRING.match(/^(\d)/)[1].to_i >= 3 
 require 'redis/namespace'
 
 module Split

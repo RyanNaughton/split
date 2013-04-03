@@ -5,6 +5,7 @@ module Split
     attr_accessor :resettable
     attr_accessor :goals
     attr_accessor :alternatives
+    attr_accessor :log_observation_data
 
     def initialize(name, options = {})
       options = {
@@ -35,6 +36,7 @@ module Split
       self.goals = options[:goals]
       self.algorithm = options[:algorithm]
       self.resettable = options[:resettable]
+      self.log_observation_data = options[:log_observation_data]
     end
 
     def self.all
@@ -225,6 +227,11 @@ module Split
       self.algorithm = exp_config['algorithm']
       self.alternatives = load_alternatives_from_redis
       self.goals = load_goals_from_redis
+    end
+
+
+    def logged_observations
+      Split.redis.lrange("experiment:#{name.to_s}:log",0,-1).map{|l|  Split::Helper.decode(l)}
     end
 
     protected

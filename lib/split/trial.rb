@@ -9,8 +9,9 @@ module Split
       self.uid = SecureRandom.hex(5)
       self.experiment = attrs[:experiment]  if !attrs[:experiment].nil?
       self.alternative = attrs[:alternative] if !attrs[:alternative].nil?
-      self.goals = attrs[:goals] if !attrs[:goals].nil?
-      self.logged_args = attrs[:logged_args] if !attrs[:logged_args].nil?
+      #self.goals = attrs[:goals] if !attrs[:goals].nil?
+      self.goals = !attrs[:goals].nil? ? attrs[:goals] : [] 
+      self.logged_args = attrs[:logged_args] if !attrs[:logged_args].nil? && experiment.log_observation_data
     end
 
     def alternative
@@ -22,7 +23,7 @@ module Split
     def complete!
       if alternative
         log!(:completion)
-        if self.goals.empty?
+        if !self.goals.nil? && self.goals.empty?
           alternative.increment_completion
         else
           self.goals.each {|g| alternative.increment_completion(g)}
@@ -41,8 +42,8 @@ module Split
     end
 
     def log!(action)
-      args = {uid: uid, action: action, args:logged_args}
-      Split.redis.rpush "experiment:#{experiment.name.to_s}:log", Split::Helper.encode(args) if !logged_args.nil?
+      args = {:uid => uid, :action => action, :args =>logged_args}
+      Split.redis.rpush "experiment:#{experiment.name.to_s}:log", Split::Helper.encode(args) if !logged_args.nil? && experiment.log_observation_data
     end
 
     def choose
